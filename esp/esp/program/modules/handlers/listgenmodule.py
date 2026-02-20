@@ -1,6 +1,8 @@
 
 from __future__ import absolute_import
 from six.moves import range
+from django.http import HttpResponse
+from django.template import loader
 __author__    = "Individual contributors (see AUTHORS file)"
 __date__      = "$DATE$"
 __rev__       = "$REV$"
@@ -354,10 +356,13 @@ class ListGenModule(ProgramModuleObj):
                     lists.append({'users': users})
 
                 if output_type == 'csv':
-                    # properly speaking, this should be text/csv, but that
-                    # causes Chrome to open in an external editor, which is
-                    # annoying
-                    mimetype = 'text/plain'
+                    # Create proper CSV download response
+                    response = HttpResponse(content_type='text/csv')
+                    response['Content-Disposition'] = 'attachment; filename="user_list.csv"'
+                    t = loader.get_template(self.baseDir()+'list_csv.html')
+                    context = {'users': users, 'lists': lists, 'fields': fields, 'listdesc': filterObj.useful_name}
+                    response.write(t.render(context))
+                    return response
                 elif output_type == 'html':
                     mimetype = 'text/html'
                 else:
